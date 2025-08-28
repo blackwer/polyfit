@@ -156,6 +156,17 @@ template <class Func, std::size_t N_compile = 0> class FuncEvalND {
 
     template <bool SIMD = true> constexpr OutputType operator()(const InputType &x) const;
 
+    template <typename... Indices> const Scalar coeff_at(Indices... indices) const {
+        static_assert(sizeof...(indices) == dim_ + 1,
+                      "Number of indices must match number of dimensions + 1. (out_i, i, j, ...)");
+        static_assert((std::is_integral_v<std::remove_cvref_t<Indices>> && ...),
+                      "All indices must be of integral type");
+        static_assert(N_compile > 0, "Cannot use coeff_at with runtime degree");
+        const auto index = detail::coeff_index<N_compile>(indices...);
+        return coeffs_flat_[index];
+    };
+    const int degree() const { return degree_; }
+
   private:
     static constexpr std::size_t coeff_count = detail::storage_required<Scalar, N_compile, dim_, outDim_>();
 

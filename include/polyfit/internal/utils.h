@@ -409,4 +409,28 @@ template <typename T> C20CONSTEXPR double relative_l2_norm(const T &approx, cons
     }
     return std::sqrt(denom == 0.0 ? num : num / denom);
 }
+
+// Helper function to calculate N^power at compile time
+template<std::size_t N, std::size_t power>
+constexpr inline std::size_t constexpr_power() {
+    if constexpr (power == 0)
+        return 1;
+    else
+        return N * constexpr_power<N, power - 1>();
+}
+
+// Base case/stopping point: linear index when there is only one dimension left
+template<std::size_t Stride>
+constexpr inline std::size_t coeff_index() {
+    return 0;
+}
+
+// Recursive case: calculate the linear index
+template<std::size_t Stride, typename... Indices>
+constexpr inline std::size_t coeff_index(std::size_t first, Indices... rest) {
+    if constexpr (sizeof...(rest) == 0)
+        return first;
+    else
+        return first * constexpr_power<Stride, sizeof...(rest)>() + coeff_index<Stride>(rest...);
+}
 } // namespace poly_eval::detail
